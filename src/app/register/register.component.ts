@@ -1,54 +1,45 @@
-import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
-import { AuthService } from '../service/auth.service';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+
+import { AuthService } from '../auth/auth.service';
+import { SignupInfo } from '../auth/signup-info';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
+  styleUrls: ['./register.component.css'],
 })
-export class RegisterComponent {
-  constructor(
-    private builder: FormBuilder,
-    private toastr: ToastrService,
-    private service: AuthService,
-    private router: Router
-  ) {}
-  registerform = this.builder.group({
-    id: this.builder.control(
-      '',
-      Validators.compose([Validators.required, Validators.minLength(5)])
-    ),
-    name: this.builder.control('', Validators.required),
-    password: this.builder.control(
-      '',
-      Validators.compose([
-        Validators.required,
-        Validators.pattern('((?=.*d)(?=.*[a-z])(?=.*[A-Z]).{8,30})'),
-      ])
-    ),
-    email: this.builder.control(
-      '',
-      Validators.compose([Validators.required, Validators.email])
-    ),
-    gender: this.builder.control('male'),
-    role: this.builder.control(''),
-    isactive: this.builder.control(false),
-  });
+export class RegisterComponent implements OnInit {
+  form: any = {};
+  signupInfo: SignupInfo;
+  isSignedUp = false;
+  isSignupFailed = false;
+  errorMessage = '';
 
-  proceedregisteration() {
-    if (this.registerform.valid) {
-      this.service.Proceedregister(this.registerform.value).subscribe((res) => {
-        this.toastr.success(
-          'Please contact admin for enable access',
-          'Registered successfully'
-        );
-        this.router.navigate(['login']);
-      });
-    } else {
-      this.toastr.warning('Please enter valid data');
-    }
+  constructor(private authService: AuthService) {}
+
+  ngOnInit() {}
+
+  onSubmit() {
+    console.log(this.form);
+
+    this.signupInfo = new SignupInfo(
+      this.form.name,
+      this.form.username,
+      this.form.email,
+      this.form.password
+    );
+
+    this.authService.signUp(this.signupInfo).subscribe(
+      (data) => {
+        console.log(data);
+        this.isSignedUp = true;
+        this.isSignupFailed = false;
+      },
+      (error) => {
+        console.log(error);
+        this.errorMessage = error.error.message;
+        this.isSignupFailed = true;
+      }
+    );
   }
 }

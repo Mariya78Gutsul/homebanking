@@ -1,55 +1,57 @@
-import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
-import { AuthService } from '../service/auth.service';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+
+import { AuthService } from '../auth/auth.service';
+import { TokenStorageService } from '../auth/token-storage.service';
+import { AuthLoginInfo } from '../auth/login-info';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  styleUrls: ['./login.component.css'],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  form: any = {};
+  isLoggedIn = false;
+  isLoginFailed = false;
+  errorMessage = '';
+  roles: string[] = [];
+  private loginInfo: AuthLoginInfo;
+
   constructor(
-    private builder: FormBuilder,
-    private toastr: ToastrService,
-    private service: AuthService,
-    private router: Router
-  ) {
-    sessionStorage.clear();
+    private authService: AuthService,
+    private tokenStorage: TokenStorageService
+  ) {}
+
+  ngOnInit() {
+    if (this.tokenStorage.getToken()) {
+      this.isLoggedIn = true;
+      this.roles = this.tokenStorage.getAuthorities();
+    }
   }
 
-  userdata: any;
-  loginform = this.builder.group({
-    username: this.builder.control('', Validators.required),
-    password: this.builder.control('', Validators.required),
-  });
-  proceedlogin() {
-    if (this.loginform.valid) {
-      //   this.service.Proceedregister(this.loginform.value).subscribe((res) => {
-      //     this.toastr.success(
-      //       'Please contact admin for enable access',
-      //       'Registered successfully'
-      //     );
-      //     this.router.navigate(['login']);
-      //   });
-      // } else {
-      //   this.toastr.warning('Please enter valid data');
-      this.service.Getbycode(this.loginform.value.username).subscribe((res) => {
-        this.userdata = res;
-        console.log(this.userdata);
-        if (this.userdata.password === this.loginform.value.password) {
-          if (this.userdata.isactive) {
-            sessionStorage.setItem('username', this.userdata.id);
-            sessionStorage.setItem('userrole', this.userdata.role);
-            this.router.navigate(['']);
-          } else {
-            this.toastr.error('Please contact admin', 'In Active User');
-          }
-        } else {
-          this.toastr.error('Invalid credentials');
-        }
-      });
-    }
+  onSubmit(): void {
+    this.loginInfo = new AuthLoginInfo(this.form.username, this.form.password);
+
+    this.authService.attemptAuth(this.loginInfo).subscribe(
+      (data) => {
+        this.tokenStorage.saveToken(data.token);
+        this.tokenStorage.saveUsername(data.username);
+        this.tokenStorage.saveAuthorities(data.roles);
+
+        this.isLoginFailed = false;
+        this.isLoggedIn = true;
+        this.roles = this.tokenStorage.getAuthorities();
+        this.reloadPage();
+      },
+      (error) => {
+        console.log(error);
+        this.errorMessage = error.error.message;
+        this.isLoginFailed = true;
+      }
+    );
+  }
+
+  reloadPage() {
+    window.location.reload();
   }
 }

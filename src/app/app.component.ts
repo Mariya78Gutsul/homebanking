@@ -1,27 +1,32 @@
-import { Component, DoCheck } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from './service/auth.service';
+import { Component, OnInit } from '@angular/core';
+
+import { TokenStorageService } from './auth/token-storage.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements DoCheck {
-  title = 'homebanking';
-  ismenurequired = false;
-  isadminuser = false;
-  constructor(private router: Router, private service: AuthService) {}
-  ngDoCheck(): void {
-    let currenturl = this.router.url;
-    if (currenturl == '/login' || currenturl == '/register') {
-    } else {
-      this.ismenurequired = true;
-    }
-    if (this.service.GetUserrole() === 'admin') {
-      this.isadminuser = true;
-    } else {
-      this.isadminuser = false;
+export class AppComponent implements OnInit {
+  roles: string[];
+  authority: string;
+
+  constructor(private tokenStorage: TokenStorageService) {}
+
+  ngOnInit() {
+    if (this.tokenStorage.getToken()) {
+      this.roles = this.tokenStorage.getAuthorities();
+      this.roles.every((role) => {
+        if (role === 'ROLE_ADMIN') {
+          this.authority = 'admin';
+          return false;
+        } else if (role === 'ROLE_PM') {
+          this.authority = 'pm';
+          return false;
+        }
+        this.authority = 'user';
+        return true;
+      });
     }
   }
 }

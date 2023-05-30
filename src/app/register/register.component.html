@@ -1,45 +1,85 @@
-<mat-card>
-  <mat-card-header>
-    <h1>User Registration</h1>
-  </mat-card-header>
+<div *ngIf="isSignedUp; else signupForm">
+  Your registration is successful. Please login!
+</div>
 
-  <mat-card-content>
+<ng-template #signupForm>
+  <div class="row col-sm-6" style="max-width: 350px">
     <form
-      class="example-form"
-      [formGroup]="registerform"
-      (ngSubmit)="proceedregisteration()"
+      name="form"
+      (ngSubmit)="f.form.valid && onSubmit()"
+      #f="ngForm"
+      novalidate
     >
-      <mat-form-field class="example-full-width">
-        <mat-label>User Name</mat-label>
-        <input matInput formControlName="id" />
-      </mat-form-field>
-
-      <mat-form-field class="example-full-width">
-        <mat-label>Name</mat-label>
-        <input matInput formControlName="name" />
-      </mat-form-field>
-
-      <mat-form-field class="example-full-width">
-        <mat-label>Password</mat-label>
-        <input type="password" matInput formControlName="password" />
-      </mat-form-field>
-
-      <mat-form-field class="example-full-width">
-        <mat-label>Email</mat-label>
-        <input matInput formControlName="email" />
-      </mat-form-field>
-      <div>
-        <mat-radio-group formControlName="gender" aria-label="Gender">
-          <mat-radio-button class="button" value="male">Male</mat-radio-button>
-          <mat-radio-button value="female">Female</mat-radio-button>
-        </mat-radio-group>
+      <div class="form-group">
+        <label for="name">Your name</label>
+        <input
+          type="text"
+          class="form-control"
+          name="name"
+          [(ngModel)]="form.name"
+          #name="ngModel"
+          required
+        />
+        <div *ngIf="f.submitted && name.invalid">
+          <div *ngIf="name.errors?.required">Name is required</div>
+        </div>
       </div>
-      <div class="button-container">
-        <button class="button" mat-raised-button color="primary">Submit</button>
-        <a routerLink="/login" mat-raised-button color="accent"
-          >Back to login</a
-        >
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          class="form-control"
+          name="username"
+          [(ngModel)]="form.username"
+          #username="ngModel"
+          required
+        />
+        <div *ngIf="f.submitted && username.invalid">
+          <div *ngIf="username.errors?.required">Username is required</div>
+        </div>
       </div>
-    </form></mat-card-content
-  >
-</mat-card>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="text"
+          class="form-control"
+          name="email"
+          [(ngModel)]="form.email"
+          #email="ngModel"
+          required
+          email
+        />
+        <div *ngIf="f.submitted && email.invalid">
+          <div *ngIf="email.errors?.required">Email is required</div>
+          <div *ngIf="email.errors?.email">
+            Email must be a valid email address
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          name="password"
+          [(ngModel)]="form.password"
+          #password="ngModel"
+          required
+          minlength="6"
+        />
+        <div *ngIf="f.submitted && password.invalid">
+          <div *ngIf="password.errors?.required">Password is required</div>
+          <div *ngIf="password.errors?.minlength">
+            Password must be at least 6 characters
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary">Register</button>
+        <div *ngIf="f.submitted && isSignupFailed" class="alert alert-warning">
+          Signup failed!<br />{{ errorMessage }}
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-template>
